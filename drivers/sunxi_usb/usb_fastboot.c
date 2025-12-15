@@ -1330,7 +1330,27 @@ static void __oem_operation(char *operation)
 
 	lockflag = 0;
 
-	if (!strncmp(operation, "lock", 4)) {
+	if (!strncmp(operation, "read_toc1", 9)) {
+		uint32_t toc1_offset = 0x8020;
+		uint32_t toc1_size = 0x11E000;
+		struct blk_desc *desc;
+		lbaint_t res;
+
+		printf("Start Reading 0x%x, size 0x%x\n", toc1_offset, toc1_size);
+
+		desc = blk_get_devnum_by_typename("sunxi_flash", 0);
+		res = blk_dread(desc, toc1_offset, toc1_size / 512, trans_data.base_recv_buffer);
+		if (res != toc1_size / 512) {
+			strcpy(response, "FAIL");
+			__sunxi_fastboot_send_status(response,
+				strlen(response));
+			return;
+		}
+		strcpy(response, "OKAY");
+		__sunxi_fastboot_send_status(response,
+			strlen(response));
+		return;
+	} else if (!strncmp(operation, "lock", 4)) {
 		if ((gd->securemode == SUNXI_SECURE_MODE_WITH_SECUREOS) ||
 		    (gd->securemode == SUNXI_SECURE_MODE_NO_SECUREOS)) {
 			printf("the system is secure\n");

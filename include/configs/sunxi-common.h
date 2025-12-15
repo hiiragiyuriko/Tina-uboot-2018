@@ -288,11 +288,19 @@
 
 #endif
 
+/* Hack: Change Sprite Command to Fastboot */
+#ifdef CONFIG_THIS_CODE_IS_DEADN
 #define SUNXI_SPRITE_ENV_SETTINGS	\
 	"bootdelay=0\0" \
 	"bootcmd=run sunxi_sprite_test\0" \
 	"console=ttyS0,115200\0" \
 	"sunxi_sprite_test=sprite_test read\0"
+#else
+#define SUNXI_SPRITE_ENV_SETTINGS	\
+	"bootdelay=1\0" \
+	"bootcmd=fastboot\0" \
+	"console=ttyS0,115200\0"
+#endif
 
 #define CONFIG_BOARD_LATE_INIT
 #define CONFIG_BOARD_EARLY_INIT_R

@@ -23,6 +23,9 @@ int do_sprite_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	__maybe_unused int ret;
 	printf("sunxi work mode=0x%x\n", get_boot_work_mode());
 	if(get_boot_work_mode() == WORK_MODE_USB_PRODUCT) {
+		// Hack: get away efex!
+		printf("efex is disabled in this u-boot to prevent accidental firmware flashing.");
+		return 0;
 		printf("run usb efex\n");
 		if(sunxi_usb_dev_register(2))
 		{

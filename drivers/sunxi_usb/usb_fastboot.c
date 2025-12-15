@@ -1488,6 +1488,9 @@ static void __unsupported_cmd(void)
 static int sunxi_fastboot_init(void)
 {
 	printf("sunxi_fastboot_init\n");
+	// TODO: Preventing watchdog from resetting the system
+	//writel(0x0, 0x030090a0); /* WDOG_IRQ_EN_REG */
+	//writel(0x0, 0x030090b8); /* WDOG_EN_REG */
 	memset(&trans_data, 0, sizeof(fastboot_trans_set_t));
 	sunxi_usb_fastboot_write_enable = 0;
 	sunxi_usb_fastboot_status       = SUNXI_USB_FASTBOOT_IDLE;

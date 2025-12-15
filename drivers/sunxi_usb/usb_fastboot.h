@@ -59,8 +59,8 @@ typedef struct {
 
 #define SUNXI_FASTBOOT_SEND_MEM_SIZE (64 * 1024)
 
-#define DEVICE_VENDOR_ID 0x1F3A
-#define DEVICE_PRODUCT_ID 0x1010
+#define DEVICE_VENDOR_ID 0x18D1
+#define DEVICE_PRODUCT_ID 0x4EE0
 #define DEVICE_BCD 0x0200
 
 #endif

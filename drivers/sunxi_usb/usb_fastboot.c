@@ -979,6 +979,36 @@ static int __try_to_download(char *download_size, char *response)
 
 	return ret;
 }
+
+/*
+*******************************************************************************
+*                     __try_to_upload
+*******************************************************************************
+*/
+static int __try_to_upload(char *response)
+{
+	int ret = -1;
+
+	trans_data.send_size = 0x11E000;
+	printf("Starting upload of %d BYTES\n", trans_data.send_size);
+	printf("Starting upload of %d MB\n", trans_data.send_size >> 20);
+
+	if (0 == trans_data.send_size) {
+		/* bad buff */
+		sprintf(response, "FAILupload: data size is 0");
+	} else {
+		/* The default case, the transfer fits
+		   completely in the interface buffer */
+		sprintf(response, "DATA%08x", trans_data.send_size);
+		printf("upload response: %s\n", response);
+
+		ret = 0;
+	}
+
+	return ret;
+}
+
+
 /*
 *******************************************************************************
 *                     __boot
@@ -1926,6 +1956,22 @@ static int sunxi_fastboot_state_loop(void *buffer)
 #endif
 				__flash_to_part((
 					char *)(sunxi_ubuf->rx_req_buffer + 6));
+		} else if (memcmp(sunxi_ubuf->rx_req_buffer, "upload", 6) ==
+			   0) {
+			printf("upload\n");
+			if (!sunxi_fastboot_status()) {
+				__limited_fastboot();
+				break;
+			}
+			ret = __try_to_upload(
+				response);
+			if (ret >= 0) {
+				fastboot_data_flag = 1;
+				sunxi_usb_fastboot_status =
+					SUNXI_USB_FASTBOOT_SEND_DATA;
+			}
+			__sunxi_fastboot_send_status(response,
+						     strlen(response));
 		} else if (memcmp(sunxi_ubuf->rx_req_buffer, "download:", 9) ==
 			   0) {
 			printf("download\n");
@@ -1979,6 +2025,18 @@ static int sunxi_fastboot_state_loop(void *buffer)
 	case SUNXI_USB_FASTBOOT_SEND_DATA:
 
 		printf("SUNXI_USB_FASTBOOT_SEND_DATA\n");
+
+		if (fastboot_data_flag == 1) {
+			printf("Transfering 0x%x size data..\n", trans_data.send_size);
+			sunxi_udc_send_data(trans_data.base_recv_buffer, trans_data.send_size);
+			//传输完毕
+			printf("fastboot transfer finish\n");
+			fastboot_data_flag	= 0;
+			sunxi_usb_fastboot_status = SUNXI_USB_FASTBOOT_IDLE;
+			sprintf(response, "OKAY");
+			__sunxi_fastboot_send_status(response,
+						     strlen(response));
+		}
 
 		break;
 

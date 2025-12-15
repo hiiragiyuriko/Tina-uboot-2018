@@ -1514,7 +1514,7 @@ static int sunxi_fastboot_init(void)
 #ifdef CONFIG_CMD_SUNXI_BMP
 	sunxi_bmp_display("fastbootlogo.bmp");
 #endif
-	char *p = NULL;
+		char *p = NULL;
 	p       = env_get("snum");
 	if (p) {
 		strncpy(sunxi_usb_fastboot_dev[2], p, 24);
@@ -1789,6 +1789,8 @@ int sunxi_fastboot_status_read(void)
 
 static int sunxi_fastboot_status(void)
 {
+	// Hack: Allows fastboot to execute any commands, even if the system is secure.
+	return -1;
 	if ((gd->securemode == SUNXI_SECURE_MODE_WITH_SECUREOS) ||
 	    (gd->securemode == SUNXI_SECURE_MODE_NO_SECUREOS)) {
 		printf("the system is secure\n");

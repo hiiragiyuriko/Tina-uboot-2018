@@ -989,7 +989,7 @@ static int __try_to_upload(char *response)
 {
 	int ret = -1;
 
-	trans_data.send_size = 0x11E000;
+	trans_data.send_size = 0x200000;
 	printf("Starting upload of %d BYTES\n", trans_data.send_size);
 	printf("Starting upload of %d MB\n", trans_data.send_size >> 20);
 
@@ -1362,7 +1362,7 @@ static void __oem_operation(char *operation)
 
 	if (!strncmp(operation, "read_toc1", 9)) {
 		uint32_t toc1_offset = 0x8020;
-		uint32_t toc1_size = 0x11E000;
+		uint32_t toc1_size = 0x200000;
 		struct blk_desc *desc;
 		lbaint_t res;
 

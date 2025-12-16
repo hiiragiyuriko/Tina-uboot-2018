@@ -989,7 +989,6 @@ static int __try_to_upload(char *response)
 {
 	int ret = -1;
 
-	trans_data.send_size = 0x200000;
 	printf("Starting upload of %d BYTES\n", trans_data.send_size);
 	printf("Starting upload of %d MB\n", trans_data.send_size >> 20);
 
@@ -1363,17 +1362,60 @@ static void __oem_operation(char *operation)
 	if (!strncmp(operation, "read_toc1", 9)) {
 		uint32_t toc1_offset_sect = 0x8020;
 		uint32_t toc1_size = 0x200000; // Guess as 2 MBytes
-		lbaint_t res;
+		int ret;
 
 		printf("Start Reading sector offset 0x%x, size 0x%x\n", toc1_offset_sect, toc1_size);
-
-		res = sunxi_flash_read(toc1_offset_sect, toc1_size / 512, trans_data.base_recv_buffer);
-		if (res != toc1_size / 512) {
+		ret = sunxi_flash_read(toc1_offset_sect, toc1_size / 512, trans_data.base_recv_buffer);
+		if (ret != toc1_size / 512) {
 			strcpy(response, "FAIL");
 			__sunxi_fastboot_send_status(response,
 				strlen(response));
 			return;
 		}
+		trans_data.send_size = toc1_size;
+		strcpy(response, "OKAY");
+		__sunxi_fastboot_send_status(response,
+			strlen(response));
+		return;
+	} else if (!strncmp(operation, "read ", 5)) {
+		// TODO: Reading a partition larger than the buffer size
+		char *name = operation+5;
+		u32 start;
+		u32 part_sectors;
+		char response[68];
+		disk_partition_t info = { 0 };
+		int ret;
+
+		ret = sunxi_partition_get_info((const char *)name, &info);
+		if (ret < 0) {
+			printf("sunxi fastboot read FAIL: partition %s does not exist\n",
+				name);
+			strcpy(response, "FAIL");
+			strcat(response, "partition does not exist");
+			__sunxi_fastboot_send_status(response,
+				strlen(response));
+			return;
+		}
+		start	= info.start;
+		part_sectors = info.size;
+		if (part_sectors*512 > SUNXI_USB_FASTBOOT_BUFFER_MAX){
+			printf("sunxi fastboot read FAIL: partition %s too big\n",
+				name);
+			strcpy(response, "FAIL");
+			strcat(response, "partition too big");
+			__sunxi_fastboot_send_status(response,
+				strlen(response));
+			return;
+		}
+		printf("Start Reading sector offset 0x%x, size 0x%x sectors\n", start, part_sectors);
+		ret = sunxi_flash_read(start, part_sectors, trans_data.base_recv_buffer);
+		if (ret != part_sectors) {
+			strcpy(response, "FAIL");
+			__sunxi_fastboot_send_status(response,
+				strlen(response));
+			return;
+		}
+		trans_data.send_size = part_sectors*512;
 		strcpy(response, "OKAY");
 		__sunxi_fastboot_send_status(response,
 			strlen(response));
